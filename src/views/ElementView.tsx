@@ -82,7 +82,7 @@ export function ElementView({ slug, lang }: { slug: string; lang: Lang }) {
       </nav>
 
       {/* Hero: the atom and its three numbers */}
-      <section className="mt-6 grid items-center gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,1fr)] lg:gap-14">
+      <section className="mt-6 grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,1fr)] lg:gap-14">
         <div className="order-2 lg:order-1">
           <AtomPanel
             lang={lang}
@@ -110,11 +110,16 @@ export function ElementView({ slug, lang }: { slug: string; lang: Lang }) {
             )}
           </div>
 
-          <div className="mt-4 flex items-end gap-5">
-            <Tile e={e} color={cat.color} lang={lang} />
-            <h1 className="stretch-wide min-w-0 text-[clamp(2.6rem,6.2vw,5.4rem)] leading-[0.92] font-[800] tracking-[-0.025em] break-words">
-              {tx.name}
-            </h1>
+          <div className="@container mt-4">
+            <div className="flex items-end gap-5">
+              <Tile e={e} color={cat.color} lang={lang} />
+              <h1
+                className="element-title stretch-wide min-w-0 leading-[0.92] font-[800] tracking-[-0.025em] break-words"
+                style={{ ["--chars" as string]: tx.name.length }}
+              >
+                {tx.name}
+              </h1>
+            </div>
           </div>
 
           <dl className="mt-9 grid grid-cols-3 border-y border-line">
@@ -143,7 +148,7 @@ export function ElementView({ slug, lang }: { slug: string; lang: Lang }) {
       </section>
 
       {/* Uses, fact and properties */}
-      <section className="mt-24 grid gap-14 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-20">
+      <section className="mt-24 grid grid-cols-1 gap-14 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-20">
         <div>
           <h2 className="stretch-semi text-2xl font-[740] tracking-tight">{t.element.usesTitle}</h2>
           {tx.uses.length > 0 ? (
@@ -178,7 +183,7 @@ export function ElementView({ slug, lang }: { slug: string; lang: Lang }) {
 
       {/* Stability */}
       <section
-        className="mt-24 grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16"
+        className="mt-24 grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16"
         aria-labelledby="stability-heading"
       >
         <div>
@@ -231,7 +236,7 @@ export function ElementView({ slug, lang }: { slug: string; lang: Lang }) {
 
       {/* Location */}
       <section
-        className="mt-24 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+        className="mt-24 grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
         aria-labelledby="where-heading"
       >
         <div>
@@ -244,8 +249,10 @@ export function ElementView({ slug, lang }: { slug: string; lang: Lang }) {
       </section>
 
       <nav aria-label={t.element.prevNextAria} className="mt-20 grid grid-cols-2 gap-4 border-t border-line pt-6">
-        <div>{prev && <BigStep el={prev} dir="prev" lang={lang} t={t} />}</div>
-        <div className="text-right">{next && <BigStep el={next} dir="next" lang={lang} t={t} />}</div>
+        <div className="@container min-w-0">{prev && <BigStep el={prev} dir="prev" lang={lang} t={t} />}</div>
+        <div className="@container min-w-0 text-right">
+          {next && <BigStep el={next} dir="next" lang={lang} t={t} />}
+        </div>
       </nav>
     </article>
   );
@@ -394,11 +401,14 @@ function StepLink({ el, dir, lang, t }: { el: ChemElement; dir: "prev" | "next";
 
 function BigStep({ el, dir, lang, t }: { el: ChemElement; dir: "prev" | "next"; lang: Lang; t: UI }) {
   return (
-    <Link href={localPath(lang, `/element/${el.slug}`)} className="group inline-block">
+    <Link href={localPath(lang, `/element/${el.slug}`)} className="group inline-block max-w-full">
       <span className="block text-sm text-faint">
         {dir === "prev" ? t.element.prev(el.number) : t.element.next(el.number)}
       </span>
-      <span className="stretch-semi block text-2xl font-[740] tracking-tight group-hover:underline group-hover:underline-offset-4">
+      <span
+        className="step-name stretch-semi block font-[740] tracking-tight group-hover:underline group-hover:underline-offset-4"
+        style={{ ["--chars" as string]: el.text[lang].name.length }}
+      >
         {el.text[lang].name}
       </span>
     </Link>

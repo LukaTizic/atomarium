@@ -26,7 +26,7 @@ export function HomeView({ lang }: { lang: Lang }) {
   return (
     <div className="mx-auto w-full max-w-[1320px] px-4 sm:px-6 lg:px-8">
       {/* Hero: the table is the hero. */}
-      <section className="grid gap-5 pt-10 pb-7 sm:pt-14 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-end lg:gap-14">
+      <section className="grid grid-cols-1 gap-5 pt-10 pb-7 sm:pt-14 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-end lg:gap-14">
         <h1 className="stretch-wide max-w-[18ch] text-[clamp(2.3rem,4.6vw,4.1rem)] leading-[0.98] font-[800] tracking-[-0.02em] text-balance">
           {t.home.h1}
         </h1>
@@ -40,7 +40,7 @@ export function HomeView({ lang }: { lang: Lang }) {
       </section>
 
       {/* What's inside an atom */}
-      <section className="mt-28 grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16">
+      <section className="mt-28 grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16">
         <div>
           <h2 className="stretch-semi text-[clamp(1.8rem,3.2vw,2.6rem)] leading-tight font-[760] tracking-tight">
             {t.home.insideTitle}
@@ -69,7 +69,7 @@ export function HomeView({ lang }: { lang: Lang }) {
 
       {/* Radioactivity */}
       <section id="stability" className="mt-28 scroll-mt-6">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
           <div>
             <h2 className="stretch-semi text-[clamp(1.8rem,3.2vw,2.6rem)] leading-tight font-[760] tracking-tight">
               {t.home.whyTitle}

@@ -64,6 +64,22 @@
   font-stretch: 62%;
 }
 
+/*
+ * Element name on its page: as large as the design wants, but never wider than
+ * the space beside the tile, so long names (Rutherfordium, Prazeodijum) fit on phones.
+ */
+.element-title {
+  font-size: min(
+    clamp(2.6rem, 6.2vw, 5.4rem),
+    calc((100cqw - clamp(4.6rem, 8vw, 6.4rem) - 1.5rem) / (var(--chars, 8) * 0.72))
+  );
+}
+
+/* Previous / next element names at the foot of an element page, same idea. */
+.step-name {
+  font-size: min(1.5rem, calc(100cqw / (var(--chars, 8) * 0.66)));
+}
+
 /* ---------- Atom animation ---------- */
 
 @keyframes orbit {

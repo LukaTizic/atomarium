@@ -184,9 +184,10 @@ export function StabilityChart({
           <div
             className="pointer-events-none absolute z-10 w-56 rounded-md bg-ground-deep/95 p-3 text-sm shadow-lg ring-1 ring-line-strong"
             style={{
-              left: `${(sx(focus.protons) / W) * 100}%`,
+              // Centre on the point, but keep the whole tooltip inside the chart on narrow screens.
+              left: `clamp(0px, calc(${(sx(focus.protons) / W) * 100}% - 7rem), calc(100% - 14rem))`,
               top: `${(sy(focus.neutrons) / H) * 100}%`,
-              transform: `translate(${focus.protons > 70 ? "calc(-100% - 14px)" : "14px"}, -50%)`,
+              transform: sy(focus.neutrons) / H < 0.4 ? "translateY(18px)" : "translateY(calc(-100% - 18px))",
             }}
           >
             <p className="font-semibold text-paper">

@@ -1,26 +1,208 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Atomarium — design tokens
+ * Ground: Prussian blue (an iron pigment). Ink: cyanotype paper white.
+ * Category colours live in src/lib/elements.ts and are pigments made from elements.
+ */
+@theme {
+  --color-ground: #0e2442;
+  --color-ground-deep: #091a33;
+  --color-panel: #12305a;
+  --color-paper: #eef4fa;
+  --color-muted: #a3b7d3;
+  --color-faint: #7189ab;
+  --color-line: rgb(190 215 245 / 0.16);
+  --color-line-strong: rgb(190 215 245 / 0.32);
+  --color-proton: #f0644b;
+  --color-neutron: #a9bad3;
+  --color-electron: #7fd4ff;
+  --color-decay: #a9e85c;
+
+  --font-sans: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Source Serif 4 Variable", ui-serif, Georgia, serif;
+
+  --text-2xs: 0.625rem;
+  --text-2xs--line-height: 0.8rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  html {
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  body {
+    background: var(--color-ground);
+    color: var(--color-paper);
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: rgb(127 212 255 / 0.35);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-electron);
+    outline-offset: 2px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Width axis of Archivo carries a lot of the personality. */
+@utility stretch-wide {
+  font-stretch: 125%;
+}
+@utility stretch-semi {
+  font-stretch: 112%;
+}
+@utility stretch-condensed {
+  font-stretch: 75%;
+}
+@utility stretch-narrow {
+  font-stretch: 62%;
+}
+
+/* ---------- Atom animation ---------- */
+
+@keyframes orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.atom-shell {
+  transform-origin: 0 0;
+  animation: orbit var(--orbit-duration, 20s) linear infinite;
+  animation-direction: var(--orbit-direction, normal);
+}
+
+.atom[data-paused="true"] .atom-shell,
+.atom[data-paused="true"] .atom-nucleus {
+  animation-play-state: paused;
+}
+
+@keyframes nucleus-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.018);
+  }
+}
+
+.atom-nucleus {
+  transform-origin: 0 0;
+  animation: nucleus-breathe 4.5s ease-in-out infinite;
+}
+
+@keyframes flash {
+  0% {
+    opacity: 0.45;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.decay-flash {
+  animation: flash 650ms ease-out forwards;
+}
+
+@keyframes fly-out {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(var(--distance, 330px));
+    opacity: 0;
+  }
+}
+
+@keyframes fly-in {
+  0% {
+    transform: translateX(var(--distance, 120px));
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+}
+
+.decay-out {
+  animation: fly-out var(--speed, 1400ms) cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+.decay-in {
+  animation: fly-in 900ms cubic-bezier(0.6, 0, 0.8, 0.4) forwards;
+}
+
+/* Page-load: the table assembles once, by atomic number. */
+@keyframes tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.tile-enter {
+  animation: tile-in 520ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  animation-delay: calc(var(--i) * 7ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atom-shell,
+  .atom-nucleus,
+  .tile-enter {
+    animation: none !important;
+  }
+  .decay-out,
+  .decay-in,
+  .decay-flash {
+    display: none;
+  }
+}
+
+/* Thin, quiet scrollbars for the horizontal table scroller on small screens. */
+.table-scroller {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+/* Temperature slider */
+input[type="range"].temp-range {
+  appearance: none;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #d6e0ee 0%, #5eb6f2 45%, #b48cf5 100%);
+}
+input[type="range"].temp-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-paper);
+  border: 3px solid var(--color-ground);
+  box-shadow: 0 0 0 1px var(--color-paper);
+  cursor: pointer;
+}
+input[type="range"].temp-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-paper);
+  border: 3px solid var(--color-ground);
+  box-shadow: 0 0 0 1px var(--color-paper);
+  cursor: pointer;
 }

@@ -1,58 +1,55 @@
 import type { Metadata, Viewport } from "next";
-import Link from "next/link";
 import "@fontsource-variable/archivo/wdth.css";
 import "@fontsource-variable/source-serif-4/opsz.css";
-import "./globals.css";
-import { SITE } from "@/lib/site";
+import "@/app/globals.css";
+import Link from "next/link";
+import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { RandomElementLink } from "@/components/RandomElementLink";
+import { type Lang, LOCALE, localPath } from "@/i18n/config";
+import { ui } from "@/i18n/ui";
+import { SITE } from "@/lib/site";
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE.url),
-  title: {
-    default: `${SITE.name}: the periodic table, atom by atom`,
-    template: `%s · ${SITE.name}`,
-  },
-  description: SITE.description,
-  openGraph: {
-    siteName: SITE.name,
-    type: "website",
-  },
-  twitter: { card: "summary_large_image" },
-};
+export function shellMetadata(lang: Lang): Metadata {
+  const t = ui(lang);
+  return {
+    metadataBase: new URL(SITE.url),
+    title: { default: t.meta.title, template: `%s · ${SITE.name}` },
+    description: t.meta.description,
+    openGraph: { siteName: SITE.name, type: "website", locale: LOCALE[lang].replace("-", "_") },
+    twitter: { card: "summary_large_image" },
+  };
+}
 
-export const viewport: Viewport = {
-  themeColor: "#08162b",
-};
+export const shellViewport: Viewport = { themeColor: "#08162b" };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+/** Root layout body shared by both languages: html, header, footer. */
+export function SiteShell({ lang, children }: { lang: Lang; children: React.ReactNode }) {
+  const t = ui(lang);
   return (
-    <html lang="en-GB">
+    <html lang={lang === "sr" ? "sr-Latn" : "en-GB"}>
       <body className="flex min-h-dvh flex-col">
         <a
           href="#main"
           className="sr-only z-50 rounded bg-paper px-3 py-2 text-ground focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
         >
-          Skip to content
+          {t.nav.skip}
         </a>
-        <header className="mx-auto flex w-full max-w-[1320px] items-center justify-between gap-6 px-4 pt-5 sm:px-6 lg:px-8">
-          <Link
-            href="/"
-            className="group flex items-center gap-2.5 rounded-sm"
-            aria-label={`${SITE.name} home`}
-          >
+        <header className="mx-auto flex w-full max-w-[1320px] items-center justify-between gap-4 px-4 pt-5 sm:gap-6 sm:px-6 lg:px-8">
+          <Link href={localPath(lang, "/")} className="group flex items-center gap-2.5 rounded-sm" aria-label={t.nav.home}>
             <Mark />
-            <span className="stretch-wide text-[1.05rem] font-[750] tracking-tight">
+            <span className="stretch-wide hidden text-[1.05rem] font-[750] tracking-tight min-[400px]:inline">
               {SITE.name}
             </span>
           </Link>
           <nav className="flex items-center gap-4 text-sm whitespace-nowrap text-muted sm:gap-5">
-            <Link href="/#table" className="hidden hover:text-paper sm:inline">
-              Table
+            <Link href={`${localPath(lang, "/")}#table`} className="hidden hover:text-paper md:inline">
+              {t.nav.table}
             </Link>
-            <Link href="/#stability" className="hover:text-paper">
-              Radioactivity
+            <Link href={`${localPath(lang, "/")}#stability`} className="hidden hover:text-paper sm:inline">
+              {t.nav.radioactivity}
             </Link>
-            <RandomElementLink className="hover:text-paper" />
+            <RandomElementLink lang={lang} label={t.nav.random} className="hover:text-paper" />
+            <LanguageSwitch lang={lang} label={t.nav.switchLabel} aria={t.nav.switchAria} />
           </nav>
         </header>
         <main id="main" className="flex-1">
@@ -61,20 +58,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <footer className="mx-auto mt-24 w-full max-w-[1320px] px-4 text-sm text-faint sm:px-6 lg:px-8">
           <div className="grid gap-6 border-t border-line py-10 md:grid-cols-[1fr_auto]">
             <p className="max-w-[62ch] leading-relaxed">
-              Category colours are pigments and glasses made from elements: vermilion from
-              mercury, cadmium orange, titanium white, verdigris from copper, Naples yellow from
-              lead and antimony, cerulean from cobalt and tin, manganese violet, erbium glass and
-              uranium glass. Element data from{" "}
+              {t.footer.pigments} {t.footer.dataBefore}{" "}
               <a
                 className="underline decoration-line-strong underline-offset-2 hover:text-paper"
                 href="https://github.com/Bowserinator/Periodic-Table-JSON"
               >
                 Periodic-Table-JSON
               </a>{" "}
-              (CC BY-SA 3.0). Half-lives are rounded; superheavy values are approximate.
+              {t.footer.dataAfter}
             </p>
             <p className="md:text-right">
-              Built by{" "}
+              {t.footer.builtBy}{" "}
               <a className="text-muted hover:text-paper" href={SITE.author.url}>
                 {SITE.author.name}
               </a>

@@ -1,6 +1,8 @@
 import raw from "@/data/elements.json";
 import { COPY } from "@/data/content";
+import { COPY_SR } from "@/data/content.sr";
 import { HALF_LIFE, MASS_NUMBER, type HalfLife } from "@/data/nuclear";
+import { type Lang, nf } from "@/i18n/config";
 import {
   CATEGORY_BY_KEY,
   type Category,
@@ -11,9 +13,25 @@ import {
 
 export * from "@/lib/chem";
 
+/** Everything about an element that changes with the language. */
+export type ElementText = {
+  name: string;
+  summary: string;
+  uses: string[];
+  fact: string;
+  note: string | null;
+  appearance: string | null;
+  discoveredBy: string;
+  /** Display year; "Ancient" for elements known since antiquity. */
+  year: string;
+  /** Shown instead of a melting point when the element won't freeze at normal pressure. */
+  meltNote: string | null;
+};
+
 export type ChemElement = {
   number: number;
   symbol: string;
+  /** English name, also used for the URL slug. */
   name: string;
   slug: string;
   mass: number;
@@ -27,8 +45,6 @@ export type ChemElement = {
   phase: Phase;
   predicted: boolean;
   melt: number | null;
-  /** Shown instead of a melting point when the element won't freeze at normal pressure. */
-  meltNote: string | null;
   boil: number | null;
   sublimes: number | null;
   density: number | null; // always g/cm³
@@ -40,7 +56,6 @@ export type ChemElement = {
   shells: number[];
   configuration: string;
   configurationShort: string;
-  appearance: string | null;
   massNumber: number;
   protons: number;
   neutrons: number;
@@ -48,12 +63,9 @@ export type ChemElement = {
   radioactive: boolean;
   halfLife: HalfLife | null;
   origin: Origin;
+  /** Discovery year as written in the source copy ("1766", "Ancient", "c. 1250"). */
   year: string;
-  discoveredBy: string;
-  summary: string;
-  uses: string[];
-  fact: string;
-  note: string | null;
+  text: Record<Lang, ElementText>;
 };
 
 type Raw = (typeof raw)[number];
@@ -91,11 +103,23 @@ function shortConfig(s: string): string {
     .trim();
 }
 
+const APPEARANCE_FIX: Record<string, string> = { Se: "black, red and grey allotropes" };
+
+/** Discoverer credits in Serbian: personal and institution names stay as written. */
+function discoveredBySr(by: string): string {
+  return by
+    .replace("Known since prehistory", "Od praistorije")
+    .replace("Known since antiquity", "Od antike")
+    .replace(/ and colleagues/g, " i saradnici")
+    .replace(/ and /g, " i ");
+}
+
 function build(e: Raw): ChemElement {
   const z = e.number;
   const name = NAME_FIX[e.name] ?? e.name;
   const copy = COPY[e.symbol];
-  if (!copy) throw new Error(`Missing copy for ${e.symbol}`);
+  const sr = COPY_SR[e.symbol];
+  if (!copy || !sr) throw new Error(`Missing copy for ${e.symbol}`);
   const cat = normaliseCategory(e.category);
   const massNumber = MASS_NUMBER[z];
   const halfLife = HALF_LIFE[z] ?? null;
@@ -119,7 +143,6 @@ function build(e: Raw): ChemElement {
     phase: (e.phase?.toLowerCase() ?? "solid") as Phase,
     predicted,
     melt: sublimes || e.symbol === "He" ? null : (e.melt ?? null),
-    meltNote: e.symbol === "He" ? "Never freezes at normal pressure" : null,
     boil: sublimes ? null : (BOIL_FIX[e.symbol] ?? e.boil ?? null),
     sublimes,
     density: e.density == null ? null : isGasUnit ? e.density / 1000 : e.density,
@@ -131,7 +154,6 @@ function build(e: Raw): ChemElement {
     shells: e.shells,
     configuration: e.electron_configuration,
     configurationShort: shortConfig(e.electron_configuration_semantic),
-    appearance: e.appearance ?? null,
     massNumber,
     protons: z,
     neutrons: massNumber - z,
@@ -140,11 +162,30 @@ function build(e: Raw): ChemElement {
     halfLife,
     origin: z >= SYNTHETIC_FROM ? "synthetic" : DECAY_ORIGIN.has(z) ? "decay" : "primordial",
     year: copy.year,
-    discoveredBy: copy.by,
-    summary: copy.summary,
-    uses: copy.uses,
-    fact: copy.fact,
-    note: copy.note ?? null,
+    text: {
+      en: {
+        name,
+        summary: copy.summary,
+        uses: copy.uses,
+        fact: copy.fact,
+        note: copy.note ?? null,
+        appearance: APPEARANCE_FIX[e.symbol] ?? e.appearance ?? null,
+        discoveredBy: copy.by,
+        year: copy.year,
+        meltNote: e.symbol === "He" ? "Never freezes at normal pressure" : null,
+      },
+      sr: {
+        name: sr.name,
+        summary: sr.summary,
+        uses: sr.uses,
+        fact: sr.fact,
+        note: sr.note ?? null,
+        appearance: sr.appearance ?? null,
+        discoveredBy: discoveredBySr(copy.by),
+        year: copy.year.replace("c. ", "oko "),
+        meltNote: e.symbol === "He" ? "Ne mrzne se pri normalnom pritisku" : null,
+      },
+    },
   };
 }
 
@@ -171,16 +212,17 @@ export function categoryOf(e: ChemElement): Category {
 
 /* ---------- element-specific formatting ---------- */
 
-export function formatMass(e: ChemElement): string {
+export function formatMass(e: ChemElement, lang: Lang = "en"): string {
   // Elements without stable isotopes are conventionally shown as [mass number],
   // except thorium, protactinium and uranium, which have standard atomic weights.
   if (e.radioactive && e.number !== 90 && e.number !== 91 && e.number !== 92) {
     return `[${e.massNumber}]`;
   }
   const digits = e.mass >= 100 ? 2 : 3;
-  return Number(e.mass.toFixed(digits)).toString();
+  return nf(lang, e.mass, { maximumFractionDigits: digits, useGrouping: false });
 }
 
-export function isotopeName(e: ChemElement): string {
-  return `${e.name}-${e.massNumber}`;
+/** "Iron-56" / "Gvožđe-56". */
+export function isotopeName(e: ChemElement, lang: Lang = "en"): string {
+  return `${e.text[lang].name}-${e.massNumber}`;
 }

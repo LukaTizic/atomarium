@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Atom } from "@/components/Atom";
 import { ElectronConfig } from "@/components/ElectronConfig";
 import {
@@ -15,19 +15,14 @@ import {
 } from "@/lib/chem";
 import { type TileElement, yearValue } from "@/lib/tile";
 import type { DecayMode } from "@/data/nuclear";
+import { count, fold, type Lang, localPath, NOUN, nf } from "@/i18n/config";
+import { type UI, ui } from "@/i18n/ui";
 
 type Mode = "category" | "state" | "electronegativity" | "density" | "year";
 
-const MODES: { key: Mode; label: string }[] = [
-  { key: "category", label: "Category" },
-  { key: "state", label: "State of matter" },
-  { key: "electronegativity", label: "Electronegativity" },
-  { key: "density", label: "Density" },
-  { key: "year", label: "Year discovered" },
-];
+const MODES: Mode[] = ["category", "state", "electronegativity", "density", "year"];
 
 const STATE_COLOR = { solid: "#D6E0EE", liquid: "#5EB6F2", gas: "#B48CF5" } as const;
-const STATE_LABEL = { solid: "Solid", liquid: "Liquid", gas: "Gas", unknown: "Unknown" } as const;
 
 /** Cyanotype ramp: deep blue through cyan to paper white. */
 const RAMP = ["#173a66", "#1f5f96", "#3a9ad0", "#8ed6f5", "#eef8ff"];
@@ -47,8 +42,9 @@ function hex(h: string): number[] {
 
 const ROOM = 293;
 
-export function PeriodicTable({ elements }: { elements: TileElement[] }) {
+export function PeriodicTable({ elements, lang }: { elements: TileElement[]; lang: Lang }) {
   const router = useRouter();
+  const t = ui(lang);
   const [mode, setMode] = useState<Mode>("category");
   const [kelvin, setKelvin] = useState(ROOM);
   const [query, setQuery] = useState("");
@@ -66,13 +62,13 @@ export function PeriodicTable({ elements }: { elements: TileElement[] }) {
   }, [elements]);
 
   /* ---- search ---- */
-  const q = query.trim().toLowerCase();
+  const q = fold(query.trim());
   const matches = useMemo(() => {
     if (!q) return null;
     const hits = elements.filter(
       (e) =>
         e.symbol.toLowerCase() === q ||
-        e.name.toLowerCase().includes(q) ||
+        e.search.includes(q) ||
         String(e.number) === q ||
         (q === "aluminum" && e.symbol === "Al") ||
         (q === "cesium" && e.symbol === "Cs") ||
@@ -104,8 +100,7 @@ export function PeriodicTable({ elements }: { elements: TileElement[] }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const moveFocus = useCallback(
-    (from: number, dx: number, dy: number) => {
+  const moveFocus = (from: number, dx: number, dy: number) => {
       const e = elements[from];
       let x = e.x;
       let y = e.y;
@@ -122,9 +117,7 @@ export function PeriodicTable({ elements }: { elements: TileElement[] }) {
         }
         if (dy !== 0) continue; // vertical moves skip gaps in the same column
       }
-    },
-    [byPos, elements],
-  );
+  };
 
   const onTileKey = (ev: React.KeyboardEvent, i: number) => {
     const map: Record<string, [number, number]> = {
@@ -152,7 +145,7 @@ export function PeriodicTable({ elements }: { elements: TileElement[] }) {
     };
   }, [elements]);
 
-  const tileStyle = (e: TileElement) => {
+  const tileStyle = (e: TileElement): TileStyle => {
     if (mode === "category") {
       const c = CATEGORY_BY_KEY[e.category].color;
       return {
@@ -162,39 +155,43 @@ export function PeriodicTable({ elements }: { elements: TileElement[] }) {
         text: "var(--color-muted)",
         dashed: e.categoryPredicted,
         value: e.name,
+        missing: false,
+        ancient: false,
       };
     }
     if (mode === "state") {
       const p = phaseAt(e, kelvin);
       if (p === "unknown")
-        return { bg: "transparent", border: "rgb(190 215 245 / 0.22)", symbol: "var(--color-faint)", text: "var(--color-faint)", dashed: true, value: "Unknown" };
+        return { bg: "transparent", border: "rgb(190 215 245 / 0.22)", symbol: "var(--color-faint)", text: "var(--color-faint)", dashed: true, value: t.table.states.unknown, missing: true, ancient: false };
       const c = STATE_COLOR[p];
-      return { bg: `${c}26`, border: `${c}80`, symbol: c, text: "var(--color-muted)", dashed: false, value: STATE_LABEL[p] };
+      return { bg: `${c}26`, border: `${c}80`, symbol: c, text: "var(--color-muted)", dashed: false, value: t.table.states[p], missing: false, ancient: false };
     }
-    let t: number | null = null;
-    let value = "No data";
+    let pos: number | null = null;
+    let value = t.table.noData;
+    let ancient = false;
     if (mode === "electronegativity" && e.electronegativity != null) {
-      t = (e.electronegativity - scales.enMin) / (scales.enMax - scales.enMin);
-      value = e.electronegativity.toFixed(2);
+      pos = (e.electronegativity - scales.enMin) / (scales.enMax - scales.enMin);
+      value = nf(lang, e.electronegativity, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
     if (mode === "density" && e.density != null && !e.predicted) {
-      t = (Math.log10(e.density) - scales.dLogMin) / (scales.dLogMax - scales.dLogMin);
-      value = e.density < 0.01 ? e.density.toExponential(1) : e.density < 10 ? e.density.toFixed(2) : e.density.toFixed(1);
+      pos = (Math.log10(e.density) - scales.dLogMin) / (scales.dLogMax - scales.dLogMin);
+      value = formatDensity(lang, e.density);
     }
     if (mode === "year") {
       const y = yearValue(e.year);
       if (y == null) {
-        t = 0;
-        value = "Ancient";
+        pos = 0;
+        value = t.table.ancient;
+        ancient = true;
       } else {
-        t = 0.08 + 0.92 * ((y - 1600) / (2010 - 1600));
-        value = e.year;
+        pos = 0.08 + 0.92 * ((y - 1600) / (2010 - 1600));
+        value = e.yearText;
       }
     }
-    if (t == null)
-      return { bg: "transparent", border: "rgb(190 215 245 / 0.18)", symbol: "var(--color-faint)", text: "var(--color-faint)", dashed: true, value };
-    const c = ramp(t);
-    const dark = t > 0.6;
+    if (pos == null)
+      return { bg: "transparent", border: "rgb(190 215 245 / 0.18)", symbol: "var(--color-faint)", text: "var(--color-faint)", dashed: true, value, missing: true, ancient };
+    const c = ramp(pos);
+    const dark = pos > 0.6;
     return {
       bg: c,
       border: c,
@@ -202,6 +199,8 @@ export function PeriodicTable({ elements }: { elements: TileElement[] }) {
       text: dark ? "rgb(8 22 43 / 0.8)" : "rgb(238 244 250 / 0.75)",
       dashed: false,
       value,
+      missing: false,
+      ancient,
     };
   };
 
@@ -211,36 +210,36 @@ export function PeriodicTable({ elements }: { elements: TileElement[] }) {
     <div>
       {/* Controls */}
       <div className="flex flex-col gap-4 border-y border-line py-4 lg:flex-row lg:items-center lg:justify-between">
-        <div role="radiogroup" aria-label="Colour the table by" className="flex flex-wrap gap-1.5">
+        <div role="radiogroup" aria-label={t.table.colourBy} className="flex flex-wrap gap-1.5">
           {MODES.map((m) => (
             <button
-              key={m.key}
+              key={m}
               type="button"
               role="radio"
-              aria-checked={mode === m.key}
-              onClick={() => setMode(m.key)}
+              aria-checked={mode === m}
+              onClick={() => setMode(m)}
               className={`rounded-full px-3.5 py-1.5 text-sm transition-colors ${
-                mode === m.key
+                mode === m
                   ? "bg-paper font-semibold text-ground"
                   : "text-muted ring-1 ring-line hover:text-paper hover:ring-line-strong"
               }`}
             >
-              {m.label}
+              {t.table.modes[m]}
             </button>
           ))}
         </div>
         <label className="relative block w-full lg:w-72">
-          <span className="sr-only">Find an element by name, symbol or number</span>
+          <span className="sr-only">{t.table.searchLabel}</span>
           <input
             ref={searchRef}
             type="search"
             value={query}
             onChange={(ev) => setQuery(ev.target.value)}
             onKeyDown={(ev) => {
-              if (ev.key === "Enter" && matches?.[0]) router.push(`/element/${matches[0].slug}`);
+              if (ev.key === "Enter" && matches?.[0]) router.push(localPath(lang, `/element/${matches[0].slug}`));
               if (ev.key === "Escape") setQuery("");
             }}
-            placeholder="Search by name, symbol or number"
+            placeholder={t.table.searchPlaceholder}
             className="w-full rounded-full bg-ground-deep py-2 pr-10 pl-4 text-sm text-paper placeholder:text-faint ring-1 ring-line outline-none focus:ring-2 focus:ring-electron"
           />
           <kbd className="pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 rounded border border-line px-1.5 text-xs text-faint lg:block">
@@ -250,7 +249,7 @@ export function PeriodicTable({ elements }: { elements: TileElement[] }) {
       </div>
 
       <div aria-live="polite" className="sr-only">
-        {matches ? `${matches.length} matching elements` : ""}
+        {matches ? t.table.matches(matches.length) : ""}
       </div>
 
       {/* Mode-specific key */}
@@ -261,7 +260,7 @@ export function PeriodicTable({ elements }: { elements: TileElement[] }) {
               key={c.key}
               type="button"
               aria-pressed={legendPinned === c.key}
-              title={`Colour: ${c.pigment}, made from ${c.pigmentSource}`}
+              title={t.table.pigmentTitle(c.text[lang].pigment, c.text[lang].pigmentSource)}
               onMouseEnter={() => setLegendFocus(c.key)}
               onMouseLeave={() => setLegendFocus(null)}
               onFocus={() => setLegendFocus(c.key)}
@@ -272,7 +271,7 @@ export function PeriodicTable({ elements }: { elements: TileElement[] }) {
               } ${legendPinned === c.key ? "ring-1 ring-line-strong" : ""}`}
             >
               <span className="size-3 rounded-full" style={{ background: c.color }} />
-              <span className="text-muted">{c.plural}</span>
+              <span className="text-muted">{c.text[lang].plural}</span>
             </button>
           ))}
         {mode === "state" && (
@@ -281,7 +280,7 @@ export function PeriodicTable({ elements }: { elements: TileElement[] }) {
               {(["solid", "liquid", "gas"] as const).map((p) => (
                 <span key={p} className="flex items-center gap-2 text-muted">
                   <span className="size-3 rounded-full" style={{ background: STATE_COLOR[p] }} />
-                  {STATE_LABEL[p]}
+                  {t.table.states[p]}
                 </span>
               ))}
             </div>
@@ -293,26 +292,26 @@ export function PeriodicTable({ elements }: { elements: TileElement[] }) {
                 step={1}
                 value={kelvin}
                 onChange={(ev) => setKelvin(Number(ev.target.value))}
-                aria-label="Temperature in kelvin"
-                aria-valuetext={`${Math.round(kelvinToC(kelvin))} degrees Celsius`}
+                aria-label={t.table.tempAria}
+                aria-valuetext={t.table.tempValue(Math.round(kelvinToC(kelvin)))}
                 className="temp-range min-w-0 flex-1"
               />
               <output className="w-36 shrink-0 text-right">
-                <span className="font-semibold text-paper">{formatTemp(kelvin)}</span>{" "}
-                <span className="text-faint">{kelvin.toLocaleString("en-GB")} K</span>
+                <span className="font-semibold text-paper">{formatTemp(kelvin, lang)}</span>{" "}
+                <span className="text-faint">{nf(lang, kelvin)} K</span>
               </output>
               <button
                 type="button"
                 onClick={() => setKelvin(ROOM)}
                 className="shrink-0 rounded-full px-3 py-1 text-muted ring-1 ring-line hover:text-paper"
               >
-                Room temperature
+                {t.table.room}
               </button>
             </div>
           </div>
         )}
         {(mode === "electronegativity" || mode === "density" || mode === "year") && (
-          <RampKey mode={mode} scales={scales} />
+          <RampKey mode={mode} scales={scales} lang={lang} t={t} />
         )}
       </div>
 
@@ -325,9 +324,9 @@ export function PeriodicTable({ elements }: { elements: TileElement[] }) {
             gridTemplateRows: "repeat(7, auto) 14px repeat(2, auto)",
           }}
           role="grid"
-          aria-label="Periodic table of the elements"
+          aria-label={t.table.gridAria}
         >
-          <Inspector el={activeEl} mode={mode} kelvin={kelvin} styleFor={tileStyle} />
+          <Inspector el={activeEl} mode={mode} kelvin={kelvin} styleFor={tileStyle} lang={lang} t={t} />
 
           {/* f-block markers in the main body */}
           <FBlockMarker x={3} y={6} range="57–71" category="lanthanide" onHover={setLegendFocus} />
@@ -342,10 +341,10 @@ export function PeriodicTable({ elements }: { elements: TileElement[] }) {
                 ref={(el) => {
                   tileRefs.current[i] = el;
                 }}
-                href={`/element/${e.slug}`}
+                href={localPath(lang, `/element/${e.slug}`)}
                 role="gridcell"
                 tabIndex={i === focusIndex ? 0 : -1}
-                aria-label={`${e.name}, ${e.symbol}, atomic number ${e.number}${mode === "category" ? "" : `, ${s.value}`}`}
+                aria-label={`${t.table.tileAria(e.name, e.symbol, e.number)}${mode === "category" ? "" : `, ${s.value}`}`}
                 onMouseEnter={() => setActive(e.number)}
                 onFocus={() => {
                   setActive(e.number);
@@ -386,10 +385,8 @@ export function PeriodicTable({ elements }: { elements: TileElement[] }) {
         </div>
       </div>
       <p className="mt-3 text-sm text-faint">
-        <span className="lg:hidden">Swipe sideways to see the whole table, and tap an element to open it.</span>
-        <span className="hidden lg:inline">
-          Use the arrow keys to move around the table, and press Enter to open an element.
-        </span>
+        <span className="lg:hidden">{t.table.hintTouch}</span>
+        <span className="hidden lg:inline">{t.table.hintKeys}</span>
       </p>
     </div>
   );
@@ -397,8 +394,13 @@ export function PeriodicTable({ elements }: { elements: TileElement[] }) {
 
 function score(e: TileElement, q: string): number {
   if (e.symbol.toLowerCase() === q || String(e.number) === q) return 3;
-  if (e.name.toLowerCase().startsWith(q)) return 2;
+  if (fold(e.name).startsWith(q)) return 2;
   return 1;
+}
+
+function formatDensity(lang: Lang, d: number): string {
+  if (d < 0.01) return d.toExponential(1).replace(".", lang === "sr" ? "," : ".");
+  return nf(lang, d, { maximumFractionDigits: d < 10 ? 2 : 1, minimumFractionDigits: d < 10 ? 2 : 1 });
 }
 
 function FBlockMarker({
@@ -430,28 +432,46 @@ function FBlockMarker({
   );
 }
 
-type TileStyle = { value: string; symbol: string };
+type TileStyle = {
+  bg: string;
+  border: string;
+  symbol: string;
+  text: string;
+  dashed: boolean;
+  value: string;
+  missing: boolean;
+  ancient: boolean;
+};
 
 function Inspector({
   el,
   mode,
   kelvin,
   styleFor,
+  lang,
+  t,
 }: {
   el: TileElement;
   mode: Mode;
   kelvin: number;
   styleFor: (e: TileElement) => TileStyle;
+  lang: Lang;
+  t: UI;
 }) {
   const cat = CATEGORY_BY_KEY[el.category];
-  const value = styleFor(el).value;
+  const s = styleFor(el);
   const modeLabel: Record<Mode, string> = {
-    category: cat.label,
-    state: `${STATE_LABEL[phaseAt(el, kelvin)]} at ${formatTemp(kelvin)}`,
-    electronegativity: `Electronegativity ${value}`,
-    density: value === "No data" ? "Density not measured" : `Density ${value} g/cm³`,
-    year: value === "Ancient" ? "Known since ancient times" : `Discovered ${value}`,
+    category: cat.text[lang].label,
+    state: t.table.stateAt(t.table.states[phaseAt(el, kelvin)], formatTemp(kelvin, lang) ?? ""),
+    electronegativity: s.missing ? t.table.noData : t.table.enValue(s.value),
+    density: s.missing ? t.table.densityNone : t.table.densityValue(s.value),
+    year: s.ancient ? t.table.knownAncient : t.table.discovered(s.value),
   };
+  const counts = [
+    count(lang, el.protons, NOUN.proton),
+    count(lang, el.neutrons, NOUN.neutron),
+    count(lang, el.protons, NOUN.electron),
+  ].join(", ");
 
   return (
     <div
@@ -472,6 +492,7 @@ function Inspector({
               : null
           }
           className="h-full w-full"
+          title={`${el.name}: ${counts}`}
         />
       </div>
       <div className="flex min-w-0 flex-col justify-center gap-1.5 py-1">
@@ -482,18 +503,16 @@ function Inspector({
           </span>
         </div>
         <Link
-          href={`/element/${el.slug}`}
+          href={localPath(lang, `/element/${el.slug}`)}
           className="stretch-wide block truncate text-[clamp(1.6rem,2.6vw,2.4rem)] leading-[1.05] font-[780] tracking-tight hover:underline hover:decoration-2 hover:underline-offset-4"
         >
           {el.name}
         </Link>
-        <p className="text-sm text-muted">
-          {el.protons} protons, {el.neutrons} neutrons, {el.protons} electrons
-        </p>
+        <p className="text-sm text-muted">{counts}</p>
         <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-faint">
-          <span>Atomic mass {el.massText}</span>
-          <ElectronConfig value={el.configurationShort} />
-          {el.radioactive ? <span className="text-decay">Radioactive</span> : null}
+          <span>{t.table.atomicMass(el.massText)}</span>
+          <ElectronConfig value={el.configurationShort} label={t.element.configAria(el.configurationShort)} />
+          {el.radioactive ? <span className="text-decay">{t.table.radioactive}</span> : null}
         </p>
       </div>
     </div>
@@ -503,20 +522,24 @@ function Inspector({
 function RampKey({
   mode,
   scales,
+  lang,
+  t,
 }: {
   mode: "electronegativity" | "density" | "year";
   scales: { enMin: number; enMax: number; dLogMin: number; dLogMax: number };
+  lang: Lang;
+  t: UI;
 }) {
+  const two = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
   const ends = {
-    electronegativity: [scales.enMin.toFixed(2), scales.enMax.toFixed(2)],
-    density: [`${Math.pow(10, scales.dLogMin).toExponential(0)} g/cm³`, `${Math.pow(10, scales.dLogMax).toFixed(1)} g/cm³`],
-    year: ["Ancient", "2010"],
+    electronegativity: [nf(lang, scales.enMin, two), nf(lang, scales.enMax, two)],
+    density: [
+      `${formatDensity(lang, Math.pow(10, scales.dLogMin))} g/cm³`,
+      `${nf(lang, Math.pow(10, scales.dLogMax), { maximumFractionDigits: 1 })} g/cm³`,
+    ],
+    year: [t.table.ancient, "2010"],
   }[mode];
-  const caption = {
-    electronegativity: "How strongly an atom pulls shared electrons towards itself (Pauling scale).",
-    density: "Mass per volume at room conditions, on a log scale. Gases are at the far left.",
-    year: "When each element was first identified. Dashed tiles have no reliable value.",
-  }[mode];
+  const caption = t.table.ramp[mode];
   return (
     <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
       <div className="flex items-center gap-3">

@@ -3,16 +3,20 @@
 import { useState } from "react";
 import { Atom } from "@/components/Atom";
 import type { DecayMode } from "@/data/nuclear";
+import type { Lang } from "@/i18n/config";
+import { ui } from "@/i18n/ui";
 
 export function AtomPanel({
-  name,
+  lang,
+  title,
   protons,
   neutrons,
   shells,
   decay,
   accent,
 }: {
-  name: string;
+  lang: Lang;
+  title: string;
   protons: number;
   neutrons: number;
   shells: number[];
@@ -21,6 +25,7 @@ export function AtomPanel({
 }) {
   const [paused, setPaused] = useState(false);
   const [labels, setLabels] = useState(true);
+  const t = ui(lang).atom;
 
   return (
     <figure className="relative">
@@ -37,13 +42,11 @@ export function AtomPanel({
         labels={labels}
         paused={paused}
         className="h-auto w-full"
-        title={`Bohr model of a ${name.toLowerCase()} atom: ${protons} protons and ${neutrons} neutrons in the nucleus, ${protons} electrons in ${shells.length} shells`}
+        title={title}
       />
       <figcaption className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-faint">
         <span className="max-w-[46ch]">
-          {decay
-            ? "Green flashes are decays. Their pace follows the half-life, sped up so you can see it."
-            : "Bohr model: real electrons form fuzzy clouds rather than neat rings."}
+          {decay ? t.decayCaption : t.bohrCaption}
         </span>
         <span className="flex gap-2">
           <button
@@ -52,7 +55,7 @@ export function AtomPanel({
             aria-pressed={labels}
             className="rounded-full px-3 py-1 text-muted ring-1 ring-line hover:text-paper hover:ring-line-strong"
           >
-            {labels ? "Hide shell labels" : "Show shell labels"}
+            {labels ? t.hideLabels : t.showLabels}
           </button>
           <button
             type="button"
@@ -60,7 +63,7 @@ export function AtomPanel({
             aria-pressed={paused}
             className="rounded-full px-3 py-1 text-muted ring-1 ring-line hover:text-paper hover:ring-line-strong"
           >
-            {paused ? "Play" : "Pause"}
+            {paused ? t.play : t.pause}
           </button>
         </span>
       </figcaption>

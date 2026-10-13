@@ -14,10 +14,18 @@ function parse(config: string): Subshell[] {
  * Orbital box diagram: one box per orbital, filled in order of energy.
  * Within a subshell, electrons spread out singly before pairing up (Hund's rule).
  */
-export function OrbitalDiagram({ configuration }: { configuration: string }) {
+export function OrbitalDiagram({
+  configuration,
+  label,
+  boxLabel,
+}: {
+  configuration: string;
+  label: string;
+  boxLabel: (electrons: number, orbitals: number) => string;
+}) {
   const subshells = parse(configuration);
   return (
-    <ol className="flex flex-wrap gap-x-4 gap-y-5" aria-label="Orbital filling diagram">
+    <ol className="flex flex-wrap gap-x-4 gap-y-5" aria-label={label}>
       {subshells.map((s) => {
         const boxes = ORBITALS[s.l];
         const ups = Math.min(s.electrons, boxes);
@@ -28,7 +36,7 @@ export function OrbitalDiagram({ configuration }: { configuration: string }) {
               {s.label}
               <sup className="text-[0.7em]">{s.electrons}</sup>
             </span>
-            <span className="flex" aria-label={`${s.electrons} electrons in ${boxes} orbitals`}>
+            <span className="flex" aria-label={boxLabel(s.electrons, boxes)}>
               {Array.from({ length: boxes }, (_, i) => (
                 <span
                   key={i}

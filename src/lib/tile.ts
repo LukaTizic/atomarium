@@ -5,7 +5,6 @@ export type TileElement = Pick<
   ChemElement,
   | "number"
   | "symbol"
-  | "name"
   | "slug"
   | "category"
   | "categoryPredicted"
@@ -26,7 +25,17 @@ export type TileElement = Pick<
   | "radioactive"
   | "year"
   | "configurationShort"
-> & { massText: string; halfLifeSeconds: number | null; decayMode: string | null };
+> & {
+  /** Name in the page's language. */
+  name: string;
+  /** Display year in the page's language. */
+  yearText: string;
+  /** Folded names in both languages, for search. */
+  search: string;
+  massText: string;
+  halfLifeSeconds: number | null;
+  decayMode: string | null;
+};
 
 export function yearValue(year: string): number | null {
   if (/ancient|prehistory|antiquity/i.test(year)) return null;

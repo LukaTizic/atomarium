@@ -8,10 +8,12 @@
  * no stable isotopes. Superheavy values are approximate and still being refined.
  */
 
+import type { Lang } from "@/i18n/config";
+
 export type DecayMode = "alpha" | "beta" | "capture" | "fission";
 
 export type HalfLife = {
-  text: string;
+  text: Record<Lang, string>;
   seconds: number;
   mode: DecayMode;
 };
@@ -36,60 +38,80 @@ const Y = 3.156e7; // seconds in a year
 const D = 86400;
 
 export const HALF_LIFE: Record<number, HalfLife> = {
-  43: { text: "about 4.2 million years", seconds: 4.2e6 * Y, mode: "beta" },
-  61: { text: "about 17.7 years", seconds: 17.7 * Y, mode: "capture" },
-  84: { text: "about 124 years", seconds: 124 * Y, mode: "alpha" },
-  85: { text: "about 8.1 hours", seconds: 8.1 * 3600, mode: "capture" },
-  86: { text: "about 3.8 days", seconds: 3.82 * D, mode: "alpha" },
-  87: { text: "about 22 minutes", seconds: 22 * 60, mode: "beta" },
-  88: { text: "about 1,600 years", seconds: 1600 * Y, mode: "alpha" },
-  89: { text: "about 21.8 years", seconds: 21.8 * Y, mode: "beta" },
-  90: { text: "about 14 billion years", seconds: 1.405e10 * Y, mode: "alpha" },
-  91: { text: "about 32,800 years", seconds: 32760 * Y, mode: "alpha" },
-  92: { text: "about 4.5 billion years", seconds: 4.468e9 * Y, mode: "alpha" },
-  93: { text: "about 2.1 million years", seconds: 2.144e6 * Y, mode: "alpha" },
-  94: { text: "about 80 million years", seconds: 8.0e7 * Y, mode: "alpha" },
-  95: { text: "about 7,370 years", seconds: 7370 * Y, mode: "alpha" },
-  96: { text: "about 15.6 million years", seconds: 1.56e7 * Y, mode: "alpha" },
-  97: { text: "about 1,380 years", seconds: 1380 * Y, mode: "alpha" },
-  98: { text: "about 900 years", seconds: 898 * Y, mode: "alpha" },
-  99: { text: "about 472 days", seconds: 471.7 * D, mode: "alpha" },
-  100: { text: "about 100 days", seconds: 100.5 * D, mode: "alpha" },
-  101: { text: "about 51 days", seconds: 51.5 * D, mode: "alpha" },
-  102: { text: "about 58 minutes", seconds: 58 * 60, mode: "alpha" },
-  103: { text: "about 11 hours", seconds: 11 * 3600, mode: "fission" },
-  104: { text: "roughly an hour", seconds: 4700, mode: "fission" },
-  105: { text: "roughly a day", seconds: 1.0e5, mode: "fission" },
-  106: { text: "roughly 10 minutes", seconds: 600, mode: "alpha" },
-  107: { text: "about a minute", seconds: 60, mode: "alpha" },
-  108: { text: "around 15 seconds", seconds: 16, mode: "alpha" },
-  109: { text: "a few seconds", seconds: 5, mode: "alpha" },
-  110: { text: "about 13 seconds", seconds: 13, mode: "fission" },
-  111: { text: "under two minutes", seconds: 100, mode: "alpha" },
-  112: { text: "about 30 seconds", seconds: 30, mode: "alpha" },
-  113: { text: "about 10 seconds", seconds: 10, mode: "alpha" },
-  114: { text: "about 2 seconds", seconds: 2, mode: "alpha" },
-  115: { text: "under a second", seconds: 0.7, mode: "alpha" },
-  116: { text: "about 60 milliseconds", seconds: 0.06, mode: "alpha" },
-  117: { text: "about 50 milliseconds", seconds: 0.05, mode: "alpha" },
-  118: { text: "under a millisecond", seconds: 0.0007, mode: "alpha" },
+  43: { text: { en: "about 4.2 million years", sr: "oko 4,2 miliona godina" }, seconds: 4.2e6 * Y, mode: "beta" },
+  61: { text: { en: "about 17.7 years", sr: "oko 17,7 godina" }, seconds: 17.7 * Y, mode: "capture" },
+  84: { text: { en: "about 124 years", sr: "oko 124 godine" }, seconds: 124 * Y, mode: "alpha" },
+  85: { text: { en: "about 8.1 hours", sr: "oko 8,1 sata" }, seconds: 8.1 * 3600, mode: "capture" },
+  86: { text: { en: "about 3.8 days", sr: "oko 3,8 dana" }, seconds: 3.82 * D, mode: "alpha" },
+  87: { text: { en: "about 22 minutes", sr: "oko 22 minuta" }, seconds: 22 * 60, mode: "beta" },
+  88: { text: { en: "about 1,600 years", sr: "oko 1.600 godina" }, seconds: 1600 * Y, mode: "alpha" },
+  89: { text: { en: "about 21.8 years", sr: "oko 21,8 godina" }, seconds: 21.8 * Y, mode: "beta" },
+  90: { text: { en: "about 14 billion years", sr: "oko 14 milijardi godina" }, seconds: 1.405e10 * Y, mode: "alpha" },
+  91: { text: { en: "about 32,800 years", sr: "oko 32.800 godina" }, seconds: 32760 * Y, mode: "alpha" },
+  92: { text: { en: "about 4.5 billion years", sr: "oko 4,5 milijardi godina" }, seconds: 4.468e9 * Y, mode: "alpha" },
+  93: { text: { en: "about 2.1 million years", sr: "oko 2,1 miliona godina" }, seconds: 2.144e6 * Y, mode: "alpha" },
+  94: { text: { en: "about 80 million years", sr: "oko 80 miliona godina" }, seconds: 8.0e7 * Y, mode: "alpha" },
+  95: { text: { en: "about 7,370 years", sr: "oko 7.370 godina" }, seconds: 7370 * Y, mode: "alpha" },
+  96: { text: { en: "about 15.6 million years", sr: "oko 15,6 miliona godina" }, seconds: 1.56e7 * Y, mode: "alpha" },
+  97: { text: { en: "about 1,380 years", sr: "oko 1.380 godina" }, seconds: 1380 * Y, mode: "alpha" },
+  98: { text: { en: "about 900 years", sr: "oko 900 godina" }, seconds: 898 * Y, mode: "alpha" },
+  99: { text: { en: "about 472 days", sr: "oko 472 dana" }, seconds: 471.7 * D, mode: "alpha" },
+  100: { text: { en: "about 100 days", sr: "oko 100 dana" }, seconds: 100.5 * D, mode: "alpha" },
+  101: { text: { en: "about 51 days", sr: "oko 51 dan" }, seconds: 51.5 * D, mode: "alpha" },
+  102: { text: { en: "about 58 minutes", sr: "oko 58 minuta" }, seconds: 58 * 60, mode: "alpha" },
+  103: { text: { en: "about 11 hours", sr: "oko 11 sati" }, seconds: 11 * 3600, mode: "fission" },
+  104: { text: { en: "roughly an hour", sr: "otprilike sat vremena" }, seconds: 4700, mode: "fission" },
+  105: { text: { en: "roughly a day", sr: "otprilike jedan dan" }, seconds: 1.0e5, mode: "fission" },
+  106: { text: { en: "roughly 10 minutes", sr: "otprilike 10 minuta" }, seconds: 600, mode: "alpha" },
+  107: { text: { en: "about a minute", sr: "oko jedan minut" }, seconds: 60, mode: "alpha" },
+  108: { text: { en: "around 15 seconds", sr: "oko 15 sekundi" }, seconds: 16, mode: "alpha" },
+  109: { text: { en: "a few seconds", sr: "nekoliko sekundi" }, seconds: 5, mode: "alpha" },
+  110: { text: { en: "about 13 seconds", sr: "oko 13 sekundi" }, seconds: 13, mode: "fission" },
+  111: { text: { en: "under two minutes", sr: "manje od dva minuta" }, seconds: 100, mode: "alpha" },
+  112: { text: { en: "about 30 seconds", sr: "oko 30 sekundi" }, seconds: 30, mode: "alpha" },
+  113: { text: { en: "about 10 seconds", sr: "oko 10 sekundi" }, seconds: 10, mode: "alpha" },
+  114: { text: { en: "about 2 seconds", sr: "oko 2 sekunde" }, seconds: 2, mode: "alpha" },
+  115: { text: { en: "under a second", sr: "manje od sekunde" }, seconds: 0.7, mode: "alpha" },
+  116: { text: { en: "about 60 milliseconds", sr: "oko 60 milisekundi" }, seconds: 0.06, mode: "alpha" },
+  117: { text: { en: "about 50 milliseconds", sr: "oko 50 milisekundi" }, seconds: 0.05, mode: "alpha" },
+  118: { text: { en: "under a millisecond", sr: "manje od milisekunde" }, seconds: 0.0007, mode: "alpha" },
 };
 
-export const DECAY_COPY: Record<DecayMode, { name: string; what: string }> = {
-  alpha: {
-    name: "Alpha decay",
-    what: "The nucleus throws out an alpha particle: a tight bundle of 2 protons and 2 neutrons (a helium nucleus). It becomes the element two places to the left.",
+export const DECAY_COPY: Record<Lang, Record<DecayMode, { name: string; what: string }>> = {
+  en: {
+    alpha: {
+      name: "Alpha decay",
+      what: "The nucleus throws out an alpha particle: a tight bundle of 2 protons and 2 neutrons (a helium nucleus). It becomes the element two places to the left.",
+    },
+    beta: {
+      name: "Beta decay",
+      what: "A neutron inside the nucleus turns into a proton and fires out a fast electron. The atom becomes the next element along.",
+    },
+    capture: {
+      name: "Electron capture",
+      what: "A proton pulls in one of the atom's own inner electrons and turns into a neutron. The atom becomes the element one place to the left.",
+    },
+    fission: {
+      name: "Spontaneous fission",
+      what: "The nucleus is so overloaded that it simply splits into two smaller nuclei, releasing a burst of energy and a few loose neutrons.",
+    },
   },
-  beta: {
-    name: "Beta decay",
-    what: "A neutron inside the nucleus turns into a proton and fires out a fast electron. The atom becomes the next element along.",
-  },
-  capture: {
-    name: "Electron capture",
-    what: "A proton pulls in one of the atom's own inner electrons and turns into a neutron. The atom becomes the element one place to the left.",
-  },
-  fission: {
-    name: "Spontaneous fission",
-    what: "The nucleus is so overloaded that it simply splits into two smaller nuclei, releasing a burst of energy and a few loose neutrons.",
+  sr: {
+    alpha: {
+      name: "Alfa raspad",
+      what: "Jezgro izbacuje alfa česticu: zbijen paket od 2 protona i 2 neutrona (jezgro helijuma). Atom postaje element koji se nalazi dva mesta levo.",
+    },
+    beta: {
+      name: "Beta raspad",
+      what: "Neutron u jezgru pretvara se u proton i izbacuje brzi elektron. Atom postaje sledeći element u nizu.",
+    },
+    capture: {
+      name: "Elektronski zahvat",
+      what: "Proton privlači jedan od unutrašnjih elektrona samog atoma i pretvara se u neutron. Atom postaje element jedno mesto levo.",
+    },
+    fission: {
+      name: "Spontana fisija",
+      what: "Jezgro je toliko preopterećeno da se jednostavno raspolovi na dva manja jezgra, oslobađajući nalet energije i nekoliko slobodnih neutrona.",
+    },
   },
 };

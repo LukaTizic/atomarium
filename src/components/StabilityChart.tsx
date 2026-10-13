@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { count, type Lang, localPath, NOUN, nf } from "@/i18n/config";
+import { ui } from "@/i18n/ui";
 
 export type StabilityPoint = {
   number: number;
@@ -35,11 +37,14 @@ const DIRECT_LABELS = new Set([26, 82, 92, 118]);
 export function StabilityChart({
   points,
   highlight,
+  lang,
 }: {
   points: StabilityPoint[];
   highlight?: number;
+  lang: Lang;
 }) {
   const router = useRouter();
+  const t = ui(lang).chart;
   const [hover, setHover] = useState<StabilityPoint | null>(null);
   const focus = hover;
 
@@ -53,13 +58,13 @@ export function StabilityChart({
           <svg width="12" height="12" aria-hidden="true">
             <circle cx="6" cy="6" r="5" fill={STABLE} />
           </svg>
-          Has a stable isotope
+          {t.stable}
         </span>
         <span className="flex items-center gap-2">
           <svg width="12" height="12" aria-hidden="true">
             <circle cx="6" cy="6" r="4.2" fill={`${RADIOACTIVE}55`} stroke={RADIOACTIVE} strokeWidth="2" />
           </svg>
-          Every isotope is radioactive
+          {t.radioactive}
         </span>
       </div>
 
@@ -68,7 +73,7 @@ export function StabilityChart({
           viewBox={`0 0 ${W} ${H}`}
           className="h-auto w-full overflow-visible"
           role="img"
-          aria-label="Scatter chart of neutrons against protons for each element. Light elements sit on the equal line; heavier ones need extra neutrons, and everything past lead is radioactive."
+          aria-label={t.aria}
           onMouseLeave={() => setHover(null)}
         >
           {/* Radioactive-only region beyond bismuth */}
@@ -81,8 +86,10 @@ export function StabilityChart({
             opacity={0.07}
           />
           <text x={sx(85)} y={sy(0) - 30} fontSize={12} fill="var(--color-muted)">
-            <tspan x={sx(85)}>Past lead and bismuth,</tspan>
-            <tspan x={sx(85)} dy={15}>no nucleus is stable</tspan>
+            <tspan x={sx(85)}>{t.region[0]}</tspan>
+            <tspan x={sx(85)} dy={15}>
+              {t.region[1]}
+            </tspan>
           </text>
 
           {/* Grid + axes */}
@@ -101,7 +108,7 @@ export function StabilityChart({
           ))}
           <line x1={M.left} x2={W - M.right} y1={sy(0)} y2={sy(0)} stroke="rgb(190 215 245 / 0.28)" />
           <text x={(M.left + W - M.right) / 2} y={H - 6} fontSize={13} textAnchor="middle" fill="var(--color-muted)">
-            Protons
+            {t.protons}
           </text>
           <text
             transform={`translate(14 ${(M.top + H - M.bottom) / 2}) rotate(-90)`}
@@ -109,7 +116,7 @@ export function StabilityChart({
             textAnchor="middle"
             fill="var(--color-muted)"
           >
-            Neutrons
+            {t.neutrons}
           </text>
 
           {/* Equal protons and neutrons */}
@@ -120,7 +127,7 @@ export function StabilityChart({
             fill="var(--color-muted)"
             textAnchor="middle"
           >
-            Equal protons and neutrons
+            {t.equal}
           </text>
 
           {/* Points */}
@@ -168,7 +175,7 @@ export function StabilityChart({
               fill="transparent"
               className="cursor-pointer"
               onMouseEnter={() => setHover(p)}
-              onClick={() => router.push(`/element/${p.slug}`)}
+              onClick={() => router.push(localPath(lang, `/element/${p.slug}`))}
             />
           ))}
         </svg>
@@ -186,41 +193,42 @@ export function StabilityChart({
               {focus.name}-{focus.massNumber}
             </p>
             <p className="text-muted">
-              {focus.protons} protons, {focus.neutrons} neutrons
+              {count(lang, focus.protons, NOUN.proton)}, {count(lang, focus.neutrons, NOUN.neutron)}
             </p>
             <p className="text-muted">
-              {(focus.neutrons / focus.protons).toFixed(2)} neutrons per proton
+              {t.perProton(nf(lang, focus.neutrons / focus.protons, { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}
             </p>
             <p className="mt-1 text-faint">
-              {focus.radioactive ? `Radioactive, half-life ${focus.halfLife}` : "Stable"}
+              {focus.radioactive ? t.radioactiveHl(focus.halfLife ?? "") : t.stableShort}
             </p>
           </div>
         )}
       </div>
 
       <details className="mt-4 text-sm text-muted">
-        <summary className="cursor-pointer text-faint hover:text-paper">View the data as a table</summary>
+        <summary className="cursor-pointer text-faint hover:text-paper">{t.viewTable}</summary>
         <div className="mt-3 max-h-72 overflow-auto rounded ring-1 ring-line">
           <table className="w-full text-left">
             <thead className="sticky top-0 bg-ground-deep text-faint">
               <tr>
-                <th className="px-3 py-2 font-medium">Isotope</th>
-                <th className="px-3 py-2 font-medium">Protons</th>
-                <th className="px-3 py-2 font-medium">Neutrons</th>
-                <th className="px-3 py-2 font-medium">Stability</th>
+                {t.cols.map((c) => (
+                  <th key={c} className="px-3 py-2 font-medium">
+                    {c}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {points.map((p) => (
                 <tr key={p.number} className="border-t border-line">
                   <td className="px-3 py-1.5">
-                    <Link href={`/element/${p.slug}`} className="hover:text-paper">
+                    <Link href={localPath(lang, `/element/${p.slug}`)} className="hover:text-paper">
                       {p.name}-{p.massNumber}
                     </Link>
                   </td>
                   <td className="px-3 py-1.5">{p.protons}</td>
                   <td className="px-3 py-1.5">{p.neutrons}</td>
-                  <td className="px-3 py-1.5">{p.radioactive ? `Half-life ${p.halfLife}` : "Stable"}</td>
+                  <td className="px-3 py-1.5">{p.radioactive ? t.halfLife(p.halfLife ?? "") : t.stableShort}</td>
                 </tr>
               ))}
             </tbody>

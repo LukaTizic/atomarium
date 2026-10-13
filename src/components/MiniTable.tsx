@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { type Lang, localPath } from "@/i18n/config";
+import { ui } from "@/i18n/ui";
 import { CATEGORY_BY_KEY } from "@/lib/chem";
 import { ELEMENTS } from "@/lib/elements";
 
 /** A small, clickable periodic table that marks where the current element sits. */
-export function MiniTable({ current }: { current: number }) {
+export function MiniTable({ current, lang }: { current: number; lang: Lang }) {
+  const t = ui(lang);
   return (
     <div
       className="grid w-full max-w-[560px] gap-[2px]"
@@ -18,9 +21,9 @@ export function MiniTable({ current }: { current: number }) {
         return (
           <Link
             key={e.number}
-            href={`/element/${e.slug}`}
-            title={`${e.number} ${e.name}`}
-            aria-label={`${e.name}${isCurrent ? " (this element)" : ""}`}
+            href={localPath(lang, `/element/${e.slug}`)}
+            title={`${e.number} ${e.text[lang].name}`}
+            aria-label={`${e.text[lang].name}${isCurrent ? ` ${t.element.thisElement}` : ""}`}
             aria-current={isCurrent ? "page" : undefined}
             className="relative aspect-square rounded-[2px] transition-transform hover:z-10 hover:scale-150"
             style={{

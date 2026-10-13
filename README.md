@@ -18,7 +18,8 @@ Built with **Next.js 16** (App Router, Cache Components), **React 19**, **TypeSc
   - an orbital box diagram built from the electron configuration (following Hund's rule);
   - a neutron–proton chart showing where the element sits on the band of stability;
   - a mini table for jumping to neighbouring elements.
-- **SEO and sharing**: per-element metadata, generated Open Graph images, sitemap and robots file.
+- **English and Serbian**: the whole site, including every element's text, is available in Serbian (Latin script) at `/sr`, with a language switch that keeps you on the same element, Serbian number formatting and plural forms, and accent-insensitive search ("gvozdje" finds Gvožđe).
+- **SEO and sharing**: per-element metadata in both languages with `hreflang` links, generated Open Graph images, sitemap and robots file.
 - **Accessibility**: keyboard support throughout, visible focus, `prefers-reduced-motion` respected, a data table behind every chart.
 
 ## Design notes
@@ -48,9 +49,11 @@ Push the repository to GitHub and import it in Vercel; no configuration is neede
 ```
 src/
   app/
-    page.tsx                       Home: table, atom explainer, radioactivity section
-    element/[slug]/page.tsx        Element page (generateStaticParams for all 118)
-    element/[slug]/opengraph-image.tsx
+    (en)/                          English routes at / and /element/[slug]
+    (sr)/sr/                       Serbian routes at /sr and /sr/element/[slug]
+    global-not-found.tsx           404 for unmatched URLs (each language has its own root layout)
+  views/                           Page bodies shared by both languages (HomeView, ElementView, SiteShell)
+  i18n/                            Language config, number/plural helpers, interface strings
   components/
     Atom.tsx                       Animated SVG Bohr model with decay bursts
     PeriodicTable.tsx              Interactive table, colour modes, search, inspector
@@ -58,7 +61,8 @@ src/
     OrbitalDiagram.tsx, MiniTable.tsx, ...
   data/
     elements.json                  Numeric element data
-    content.ts                     Written summaries, uses, facts, discovery
+    content.ts                     Written summaries, uses, facts, discovery (English)
+    content.sr.ts                  The same, in Serbian
     nuclear.ts                     Isotopes, half-lives and decay modes
   lib/
     chem.ts                        Client-safe helpers and category palette

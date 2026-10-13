@@ -5,7 +5,7 @@ export const SITE = {
   // Change this to the deployed URL (used for sitemap and social previews).
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://atomarium.vercel.app",
   author: {
-    name: "Luka Tizic",
+    name: "Semperor",
     url: "https://github.com/LukaTizic",
   },
   repo: "https://github.com/LukaTizic/atomarium",

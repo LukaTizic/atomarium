@@ -177,7 +177,7 @@ export function Atom({
             cy={p.y}
             r={nucleons.rn}
             fill={`url(#${p.isProton ? pId : nId})`}
-            stroke="rgb(9 26 51 / 0.55)"
+            stroke="rgb(5 15 32 / 0.55)"
             strokeWidth={Math.min(0.8, nucleons.rn * 0.12)}
           />
         ))}
@@ -215,7 +215,7 @@ export function Atom({
               width={44}
               height={18}
               rx={9}
-              fill="#0e2442"
+              fill="#08162b"
               stroke="rgb(190 215 245 / 0.3)"
               vectorEffect="non-scaling-stroke"
             />

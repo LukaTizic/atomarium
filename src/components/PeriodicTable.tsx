@@ -198,8 +198,8 @@ export function PeriodicTable({ elements }: { elements: TileElement[] }) {
     return {
       bg: c,
       border: c,
-      symbol: dark ? "#0e2442" : "#eef4fa",
-      text: dark ? "rgb(14 36 66 / 0.8)" : "rgb(238 244 250 / 0.75)",
+      symbol: dark ? "#08162b" : "#eef4fa",
+      text: dark ? "rgb(8 22 43 / 0.8)" : "rgb(238 244 250 / 0.75)",
       dashed: false,
       value,
     };

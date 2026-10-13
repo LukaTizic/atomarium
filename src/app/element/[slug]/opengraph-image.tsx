@@ -24,7 +24,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
           alignItems: "center",
           gap: 64,
           padding: "0 90px",
-          background: "#0e2442",
+          background: "#08162b",
           color: "#eef4fa",
         }}
       >

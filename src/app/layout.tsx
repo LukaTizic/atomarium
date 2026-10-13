@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0e2442",
+  themeColor: "#08162b",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -78,8 +78,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <a className="text-muted hover:text-paper" href={SITE.author.url}>
                 {SITE.author.name}
               </a>
-              <br />
-              Next.js and Tailwind CSS
             </p>
           </div>
         </footer>

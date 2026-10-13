@@ -6,9 +6,9 @@
  * Category colours live in src/lib/elements.ts and are pigments made from elements.
  */
 @theme {
-  --color-ground: #0e2442;
-  --color-ground-deep: #091a33;
-  --color-panel: #12305a;
+  --color-ground: #08162b;
+  --color-ground-deep: #050f20;
+  --color-panel: #0e2442;
   --color-paper: #eef4fa;
   --color-muted: #a3b7d3;
   --color-faint: #7189ab;

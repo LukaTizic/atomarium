@@ -16,10 +16,10 @@ export type StabilityPoint = {
   halfLife: string | null;
 };
 
-// Validated (dark surface #0e2442): stable vs radioactive, plus fill/ring as secondary encoding.
+// Validated (dark surface #08162b): stable vs radioactive, plus fill/ring as secondary encoding.
 const STABLE = "#4A9BDB";
 const RADIOACTIVE = "#70A836";
-const SURFACE = "#0e2442";
+const SURFACE = "#08162b";
 
 const W = 760;
 const H = 470;
